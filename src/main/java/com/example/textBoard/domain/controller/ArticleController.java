@@ -1,16 +1,17 @@
 package com.example.textBoard.domain.controller;
 
 import com.example.textBoard.base.CommonUtil;
-import com.example.textBoard.domain.model.Article;
-import com.example.textBoard.domain.model.ArticleFileRepository;
-import com.example.textBoard.domain.model.ArticleMySQLRepository;
-import com.example.textBoard.domain.model.Repository;
+import com.example.textBoard.domain.model.*;
 import com.example.textBoard.domain.view.ArticleView;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -19,51 +20,41 @@ import java.util.Scanner;
 public class ArticleController { // Model + Controller
 
     CommonUtil commonUtil = new CommonUtil();
-    ArticleView articleView = new ArticleView();
-    Repository articleRepository = new ArticleFileRepository(); // 메모리 DB
-
-    Scanner scan = commonUtil.getScanner();
-    int WRONG_VALUE = -1;
-
+    Repository articleRepository = new ArticleMemRepository(); // 메모리 DB
     @RequestMapping("/search")
     @ResponseBody
-    public ArrayList<Article> search(@RequestParam("keyword") String keyword) {
-        // 검색어를 입력
-//        System.out.print("검색 키워드를 입력해주세요 :");
-//        String keyword = scan.nextLine();
+    public ArrayList<Article> search(@RequestParam(value = "keyword", defaultValue = "") String keyword) {
+
         ArrayList<Article> searchedList = articleRepository.findArticleByKeyword(keyword);
-
-//        if (searchedList == null) {
-//            System.out.println("없는 게시물입니다.");
-//            return null;
-//        }
-
-//        articleView.printArticleList(searchedList);
         return searchedList;
     }
 
     @RequestMapping("/detail")
     @ResponseBody
-    public Article detail(@RequestParam("num") int num) {
-//        System.out.print("상세보기 할 게시물 번호를 입력해주세요 : ");
-
-//        int inputId = getParamAsInt(num, WRONG_VALUE);
-//        if (inputId == WRONG_VALUE) {
-//            return null;
-//        }
+    public String detail(@RequestParam("num") int num) {
 
         Article article = articleRepository.findArticleById(num);
 
-//        if (article == null) {
-//            System.out.println("없는 게시물입니다.");
-//            return ;
-//        }
+        if (article == null) {
+            return "없는 게시물 입니다.";
+        }
 
         article.increaseHit();
-        articleView.printArticleDetail(article);
         articleRepository.hitSave(article);
 
-        return article;
+        // 객체를 -> json 문자열로 반환 -> jackson 라이브러리 사용
+        // ObjectMapper 생성
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // Java 객체를 JSON 문자열로 변환 (직렬화)
+        try {
+            String json = objectMapper.writeValueAsString(article);
+            return json;
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return "";
 
 
     }
@@ -71,13 +62,6 @@ public class ArticleController { // Model + Controller
     @RequestMapping("/delete")
     @ResponseBody
     public String delete(@RequestParam("num") int num) {
-
-//        System.out.print("삭제할 게시물 번호를 입력해주세요 : ");
-
-//        int inputId = getParamAsInt(num, WRONG_VALUE);
-//        if (inputId == WRONG_VALUE) {
-//            return null;
-//        }
 
         Article article = articleRepository.findArticleById(num);
 
@@ -96,12 +80,6 @@ public class ArticleController { // Model + Controller
                          @RequestParam("title") String title,
                          @RequestParam("body") String body
                         ) {
-//        System.out.print("수정할 게시물 번호를 입력해주세요 : ");
-
-//        int inputId = getParamAsInt(num, WRONG_VALUE);
-//        if(inputId == WRONG_VALUE) {
-//            return null;
-//        }
 
         Article article = articleRepository.findArticleById(num);
 
@@ -109,15 +87,7 @@ public class ArticleController { // Model + Controller
 
             return "없는 게시물입니다.";
         }
-
-//        System.out.print("새로운 제목을 입력해주세요 : ");
-//        String newTitle = scan.nextLine();
-
-//        System.out.print("새로운 내용을 입력해주세요 : ");
-//        String newBody = scan.nextLine();
-
         articleRepository.updateArticle(article, title, body);
-//        System.out.printf("%d번 게시물이 수정되었습니다.\n", inputId);
         return "%d번 게시물이 수정되었습니다.".formatted(num);
     }
 
@@ -127,29 +97,14 @@ public class ArticleController { // Model + Controller
         ArrayList<Article> articleList = articleRepository.findAll();
 
         return articleList;
-//        articleView.printArticleList(articleList); // 전체 출력 -> 전체 저장소 넘기기
     }
 
     @RequestMapping("/add")
     @ResponseBody
     public String add(@RequestParam("title") String title, @RequestParam("body") String body) {
-//        System.out.print("게시물 제목을 입력해주세요 : ");
-//        String title = scan.nextLine();
-//
-//        System.out.print("게시물 내용을 입력해주세요 : ");
-//        String body = scan.nextLine();
 
         articleRepository.saveArticle(title, body);
-//        System.out.println("게시물이 등록되었습니다.");
         return "게시물이 등록되었습니다.";
     }
 
-//    private int getParamAsInt(String param, int defaultValue) {
-//        try {
-//            return Integer.parseInt(param);
-//        } catch (NumberFormatException e) {
-//            System.out.println("숫자를 입력해주세요.");
-//            return defaultValue;
-//        }
-//    }
 }
