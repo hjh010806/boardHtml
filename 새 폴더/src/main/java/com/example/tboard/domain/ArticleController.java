@@ -10,7 +10,6 @@ import java.util.ArrayList;
 @Controller
 public class ArticleController { // Model + Controller
 
-    CommonUtil commonUtil = new CommonUtil();
     ArticleRepository articleRepository = new ArticleRepository();
 
     @RequestMapping("/search")
@@ -21,9 +20,8 @@ public class ArticleController { // Model + Controller
         return searchedList;
     }
 
-    @RequestMapping("/detail")
-    public String detail(@RequestParam("articleId") int articleId,
-                         Model model) {
+    @RequestMapping("/detail/{articleId}")
+    public String detail(@PathVariable("articleId") int articleId, Model model) {
 
         Article article = articleRepository.findArticleById(articleId);
 
@@ -37,9 +35,9 @@ public class ArticleController { // Model + Controller
         return "detail";
     }
 
-    @RequestMapping("/delete")
-    @ResponseBody
-    public String delete(@RequestParam("articleId") int articleId) {
+    @RequestMapping("/delete/{articleId}")
+    public String delete(@PathVariable("articleId") int articleId) {
+
 
         Article article = articleRepository.findArticleById(articleId);
 
@@ -48,7 +46,7 @@ public class ArticleController { // Model + Controller
         }
 
         articleRepository.deleteArticle(article);
-        return "%d 게시물이 삭제되었습니다.".formatted(articleId);
+        return "redirect:/list";
     }
 
     @RequestMapping("/update")
