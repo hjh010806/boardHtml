@@ -6,6 +6,7 @@ import com.example.textBoard.domain.view.ArticleView;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -92,19 +93,26 @@ public class ArticleController { // Model + Controller
     }
 
     @RequestMapping("/list")
-    @ResponseBody
-    public ArrayList<Article> list() {
+    public String list(Model model) {
         ArrayList<Article> articleList = articleRepository.findAll();
+        model.addAttribute("articleList",articleList);
 
-        return articleList;
+        return "list";
     }
 
+    //실제 데이터 저장 처리 부분
     @RequestMapping("/add")
-    @ResponseBody
-    public String add(@RequestParam("title") String title, @RequestParam("body") String body) {
+    public String add(@RequestParam("title") String title, @RequestParam("body") String body, Model model) {
 
         articleRepository.saveArticle(title, body);
-        return "게시물이 등록되었습니다.";
+        ArrayList<Article> articleList = articleRepository.findAll();
+        model.addAttribute("articleList",articleList);
+        return "list";
     }
 
+    //입력화면 보여주기
+    @RequestMapping("/form")
+    public String form(){
+        return "form";
+    }
 }
